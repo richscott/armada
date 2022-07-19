@@ -1,8 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Armada.Client", "Armada.Client\Armada.Client.csproj", "{8016908D-697F-48B0-9AAA-048A64A06FA8}"
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32630.192
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Armada.Client", "Armada.Client\Armada.Client.csproj", "{8016908D-697F-48B0-9AAA-048A64A06FA8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Armada.Client.Test", "Armada.Client.Test\Armada.Client.Test.csproj", "{FFF216CF-27D6-4E56-B472-30092FF6AE4D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Armada.Client.Test", "Armada.Client.Test\Armada.Client.Test.csproj", "{FFF216CF-27D6-4E56-B472-30092FF6AE4D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CDD4D847-750F-4A28-826B-F6C0A0AB8CCC}"
+	ProjectSection(SolutionItems) = preProject
+		.runsettings = .runsettings
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +26,11 @@ Global
 		{FFF216CF-27D6-4E56-B472-30092FF6AE4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FFF216CF-27D6-4E56-B472-30092FF6AE4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FFF216CF-27D6-4E56-B472-30092FF6AE4D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7F2BCDBD-FCF4-4872-8126-56D09042EEF3}
 	EndGlobalSection
 EndGlobal
