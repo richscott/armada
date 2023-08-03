@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"math/rand"
 	"sync"
@@ -14,11 +15,16 @@ import (
 	jsgrpc "github.com/armadaproject/armada/pkg/api/jobservice"
 )
 
+var (
+	rng     *rand.Rand
+	numJobs = flag.Int("jobs", 1000, "number of jobs")
+)
+
 func init() {
-	rand.Seed(time.Now().UnixNano())
+	rng = rand.New(rand.NewSource(time.Now().UnixNano()))
+	flag.Parse()
 }
 
-// TODO: Add arguments to control how the load is applied.
 func main() {
 	ctx := context.Background()
 	wg := sync.WaitGroup{}
@@ -37,12 +43,11 @@ func main() {
 	}
 	fmt.Println(healthResp.Status.String())
 
-	prefix := rand.Intn(10000)
+	prefix := rng.Intn(10000)
 
-	maxJob := 1000
-	wg.Add(maxJob)
+	wg.Add(*numJobs)
 
-	for i := 0; i < maxJob; i++ {
+	for i := 0; i < *numJobs; i++ {
 		go func(n int) {
 			err := queryJobStatus(ctx, conn, n, prefix)
 			if err != nil {

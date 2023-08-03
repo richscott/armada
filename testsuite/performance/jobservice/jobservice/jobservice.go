@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -18,6 +19,15 @@ import (
 
 	_ "net/http/pprof"
 )
+
+var (
+	maxConns     = flag.Int("maxconns", 50, "maximum number of Postgres pool connections")
+	maxIdleConns = flag.Int("maxidleconns", 10, "maximum number of idle Postgres pool connections")
+)
+
+func init() {
+	flag.Parse()
+}
 
 func main() {
 	var wg sync.WaitGroup
@@ -73,8 +83,8 @@ func main() {
 				ForceNoTls: true,
 			},
 			PostgresConfig: configuration.PostgresConfig{
-				PoolMaxOpenConns:    50,
-				PoolMaxIdleConns:    10,
+				PoolMaxOpenConns:    *maxConns,
+				PoolMaxIdleConns:    *maxIdleConns,
 				PoolMaxConnLifetime: time.Duration(time.Minute * 30),
 				Connection: map[string]string{
 					"host":     "localhost",
