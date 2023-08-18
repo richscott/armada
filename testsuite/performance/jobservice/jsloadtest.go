@@ -59,7 +59,6 @@ func main() {
 				wg.Done()
 			}(jobSetId, jobId)
 		}
-
 	}
 	wg.Wait()
 }
