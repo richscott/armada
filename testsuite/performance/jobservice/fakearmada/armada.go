@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net"
 	"sync"
@@ -12,6 +13,15 @@ import (
 
 	"github.com/armadaproject/armada/pkg/api"
 )
+
+var (
+	NumJobs    = flag.Int("jobs", 100, "number of jobs per jobset")
+	NumJobSets = flag.Int("jobsets", 50, "number of jobsets")
+)
+
+func init() {
+	flag.Parse()
+}
 
 func ServePerformanceTestArmadaServer(port int) error {
 	comp := encoding.GetCompressor(gzip.Name)

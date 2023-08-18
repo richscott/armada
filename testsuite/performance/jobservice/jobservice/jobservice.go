@@ -16,8 +16,7 @@ import (
 	"github.com/armadaproject/armada/internal/jobservice"
 	"github.com/armadaproject/armada/internal/jobservice/configuration"
 	"github.com/armadaproject/armada/pkg/client"
-
-	_ "net/http/pprof"
+	// _ "net/http/pprof"
 )
 
 var (
@@ -55,19 +54,20 @@ func main() {
 	comp := encoding.GetCompressor(gzip.Name)
 	encoding.RegisterCompressor(comp)
 
-	outfile, err := os.Create("jobservice.profile")
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	defer outfile.Close()
-
 	/*
+		outfile, err := os.Create("jobservice.profile")
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		defer outfile.Close()
+
 		err = pprof.StartCPUProfile(outfile)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
-		}*/
+		}
+	*/
 
 	js := jobservice.New()
 	wg.Add(1)

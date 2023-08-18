@@ -49,27 +49,31 @@ func (s *PerformanceTestEventServer) Watch(req *api.WatchRequest, stream api.Eve
 
 type scriptedMessage struct {
 	Delay       time.Duration
-	MessageFunc func(*api.JobSetRequest) *api.EventMessage
+	MessageFunc func(req *api.JobSetRequest, jobSetId, jobId int) *api.EventMessage
 }
 
 var messageScript = []*scriptedMessage{
 	{ // Submitted
 		Delay: time.Duration(1),
-		MessageFunc: func(request *api.JobSetRequest) *api.EventMessage {
+		MessageFunc: func(request *api.JobSetRequest, jobSetId, jobId int) *api.EventMessage {
+			jobIdStr := fmt.Sprintf("%d", jobId)
+			jobSetIdStr := fmt.Sprintf("%d", jobSetId)
+			now := time.Now()
+
 			return &api.EventMessage{
 				Events: &api.EventMessage_Submitted{
 					Submitted: &api.JobSubmittedEvent{
-						JobId:    "fake_job_id",
-						JobSetId: request.Id,
+						JobId:    jobIdStr,
+						JobSetId: jobSetIdStr,
 						Queue:    request.Queue,
-						Created:  time.Now(),
+						Created:  now,
 						Job: api.Job{
-							Id:        "fake_job_id",
+							Id:        jobIdStr,
 							ClientId:  "",
 							Queue:     request.Queue,
-							JobSetId:  request.Id,
+							JobSetId:  jobSetIdStr,
 							Namespace: "fakeNamespace",
-							Created:   time.Now(),
+							Created:   now,
 						},
 					},
 				},
@@ -78,14 +82,18 @@ var messageScript = []*scriptedMessage{
 	},
 	{ // Queued
 		Delay: time.Duration(time.Second * 1),
-		MessageFunc: func(request *api.JobSetRequest) *api.EventMessage {
+		MessageFunc: func(request *api.JobSetRequest, jobSetId, jobId int) *api.EventMessage {
+			jobIdStr := fmt.Sprintf("%d", jobId)
+			jobSetIdStr := fmt.Sprintf("%d", jobSetId)
+			now := time.Now()
+
 			return &api.EventMessage{
 				Events: &api.EventMessage_Queued{
 					Queued: &api.JobQueuedEvent{
-						JobId:    "fake_job_id",
-						JobSetId: request.Id,
+						JobId:    jobIdStr,
+						JobSetId: jobSetIdStr,
 						Queue:    request.Queue,
-						Created:  time.Now(),
+						Created:  now,
 					},
 				},
 			}
@@ -93,14 +101,18 @@ var messageScript = []*scriptedMessage{
 	},
 	{ // Running
 		Delay: time.Duration(time.Second * 1),
-		MessageFunc: func(request *api.JobSetRequest) *api.EventMessage {
+		MessageFunc: func(request *api.JobSetRequest, jobSetId, jobId int) *api.EventMessage {
+			jobIdStr := fmt.Sprintf("%d", jobId)
+			jobSetIdStr := fmt.Sprintf("%d", jobSetId)
+			now := time.Now()
+
 			return &api.EventMessage{
 				Events: &api.EventMessage_Running{
 					Running: &api.JobRunningEvent{
-						JobId:        "fake_job_id",
-						JobSetId:     request.Id,
+						JobId:        jobIdStr,
+						JobSetId:     jobSetIdStr,
 						Queue:        request.Queue,
-						Created:      time.Now(),
+						Created:      now,
 						ClusterId:    "fakeCluster",
 						KubernetesId: "fakeK8s",
 						NodeName:     "fakeNode",
@@ -114,14 +126,18 @@ var messageScript = []*scriptedMessage{
 	},
 	{ // Success
 		Delay: time.Duration(time.Second * 10),
-		MessageFunc: func(request *api.JobSetRequest) *api.EventMessage {
+		MessageFunc: func(request *api.JobSetRequest, jobSetId, jobId int) *api.EventMessage {
+			jobIdStr := fmt.Sprintf("%d", jobId)
+			jobSetIdStr := fmt.Sprintf("%d", jobSetId)
+			now := time.Now()
+
 			return &api.EventMessage{
 				Events: &api.EventMessage_Succeeded{
 					Succeeded: &api.JobSucceededEvent{
-						JobId:        "fake_job_id",
-						JobSetId:     request.Id,
+						JobId:        jobIdStr,
+						JobSetId:     jobSetIdStr,
 						Queue:        request.Queue,
-						Created:      time.Now(),
+						Created:      now,
 						ClusterId:    "fakeCluster",
 						KubernetesId: "fakeK8s",
 						NodeName:     "fakeNode",
@@ -135,19 +151,22 @@ var messageScript = []*scriptedMessage{
 	},
 }
 
-func (s *PerformanceTestEventServer) serveSimulatedEvents(request *api.JobSetRequest, stream api.Event_GetJobSetEventsServer) error {
-	nextId := 1
-
-	for _, message := range messageScript {
-		time.Sleep(message.Delay)
-		err := stream.Send(&api.EventStreamMessage{
-			Id:      fmt.Sprintf("%d", nextId),
-			Message: message.MessageFunc(request),
-		})
-		if err != nil {
-			return err
+func (s *PerformanceTestEventServer) serveSimulatedEvents(request *api.JobSetRequest,
+	stream api.Event_GetJobSetEventsServer,
+) error {
+	for jobSetId := 0; jobSetId < *NumJobSets; jobSetId++ {
+		for jobId := 0; jobId < *NumJobs; jobId++ {
+			for _, message := range messageScript {
+				time.Sleep(message.Delay)
+				err := stream.Send(&api.EventStreamMessage{
+					Id:      fmt.Sprintf("%d-%d", jobSetId, jobId),
+					Message: message.MessageFunc(request, jobSetId, jobId),
+				})
+				if err != nil {
+					return err
+				}
+			}
 		}
-		nextId += 1
 	}
 
 	// Keep the stream active but don't send anything
