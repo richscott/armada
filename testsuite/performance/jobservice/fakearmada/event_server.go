@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -81,7 +82,7 @@ var messageScript = []*scriptedMessage{
 		},
 	},
 	{ // Queued
-		Delay: time.Duration(time.Second * 1),
+		Delay: time.Duration(time.Millisecond * 200),
 		MessageFunc: func(request *api.JobSetRequest, jobSetId, jobId int) *api.EventMessage {
 			jobIdStr := fmt.Sprintf("%d", jobId)
 			jobSetIdStr := fmt.Sprintf("%d", jobSetId)
@@ -100,7 +101,7 @@ var messageScript = []*scriptedMessage{
 		},
 	},
 	{ // Running
-		Delay: time.Duration(time.Second * 1),
+		Delay: time.Duration(time.Millisecond * 500),
 		MessageFunc: func(request *api.JobSetRequest, jobSetId, jobId int) *api.EventMessage {
 			jobIdStr := fmt.Sprintf("%d", jobId)
 			jobSetIdStr := fmt.Sprintf("%d", jobSetId)
@@ -125,7 +126,7 @@ var messageScript = []*scriptedMessage{
 		},
 	},
 	{ // Success
-		Delay: time.Duration(time.Second * 10),
+		Delay: time.Duration(time.Second * 5),
 		MessageFunc: func(request *api.JobSetRequest, jobSetId, jobId int) *api.EventMessage {
 			jobIdStr := fmt.Sprintf("%d", jobId)
 			jobSetIdStr := fmt.Sprintf("%d", jobSetId)
@@ -154,17 +155,20 @@ var messageScript = []*scriptedMessage{
 func (s *PerformanceTestEventServer) serveSimulatedEvents(request *api.JobSetRequest,
 	stream api.Event_GetJobSetEventsServer,
 ) error {
-	for jobSetId := 0; jobSetId < *NumJobSets; jobSetId++ {
-		for jobId := 0; jobId < *NumJobs; jobId++ {
-			for _, message := range messageScript {
-				time.Sleep(message.Delay)
-				err := stream.Send(&api.EventStreamMessage{
-					Id:      fmt.Sprintf("%d-%d", jobSetId, jobId),
-					Message: message.MessageFunc(request, jobSetId, jobId),
-				})
-				if err != nil {
-					return err
-				}
+	jobSetId, err := strconv.Atoi(request.Id)
+	if err != nil {
+		return err
+	}
+
+	for jobId := 0; jobId < *NumJobs; jobId++ {
+		for _, message := range messageScript {
+			time.Sleep(message.Delay)
+			err := stream.Send(&api.EventStreamMessage{
+				Id:      fmt.Sprintf("%d-%d", jobSetId, jobId),
+				Message: message.MessageFunc(request, jobSetId, jobId),
+			})
+			if err != nil {
+				return err
 			}
 		}
 	}

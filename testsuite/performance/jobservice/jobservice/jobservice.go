@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/gzip"
 
+	grpcconfig "github.com/armadaproject/armada/internal/common/grpc/configuration"
 	"github.com/armadaproject/armada/internal/jobservice"
 	"github.com/armadaproject/armada/internal/jobservice/configuration"
 	"github.com/armadaproject/armada/pkg/client"
@@ -72,12 +73,16 @@ func main() {
 	js := jobservice.New()
 	wg.Add(1)
 	go func() {
-		os.Setenv("JOBSERVICE_DEBUG", "TRUE")
+		// os.Setenv("JOBSERVICE_DEBUG", "TRUE")
 		err := js.StartUp(ctx, &configuration.JobServiceConfiguration{
 			GrpcPort:     2000,
 			MetricsPort:  2001,
 			HttpPort:     2002,
 			DatabaseType: "postgres",
+			GrpcPool: grpcconfig.GrpcPoolConfig{
+				InitialConnections: 10,
+				Capacity:           50,
+			},
 			ApiConnection: client.ApiConnectionDetails{
 				ArmadaUrl:  "localhost:1337",
 				ForceNoTls: true,
