@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"math/rand"
-	"sync"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -27,6 +26,8 @@ type JSQuery struct {
 	Prefix   int
 }
 
+const workerPoolSize = 50
+
 func init() {
 	rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 	flag.Parse()
@@ -34,7 +35,6 @@ func init() {
 
 func main() {
 	ctx := context.Background()
-	wg := sync.WaitGroup{}
 
 	// Launch a jobservice client to query jobservice about a jobset
 	conn, err := grpc.Dial("localhost:2000", grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -52,37 +52,41 @@ func main() {
 
 	prefix := rng.Intn(10000)
 
-	wg.Add(*numJobs * *numJobSets)
+	numTasks := *numJobSets * *numJobs
+	queries := make(chan JSQuery, numTasks)
+	results := make(chan string, numTasks)
 
 	for jobSetId := 0; jobSetId < *numJobSets; jobSetId++ {
 		for jobId := 0; jobId < *numJobs; jobId++ {
-			// fmt.Printf("querying jobset %d job %d\n", jobSetId, jobId)
-			go func(jobSetId, jobId int) {
-				query := JSQuery{JobSetId: jobSetId, JobId: jobId, Prefix: prefix}
-				err := queryJobStatus(ctx, conn, query)
-				if err != nil {
-					fmt.Printf("Error querying job status: %v\n", err)
-				}
-				wg.Done()
-			}(jobSetId, jobId)
+			queries <- JSQuery{JobSetId: jobSetId, JobId: jobId, Prefix: prefix}
 		}
 	}
-	wg.Wait()
-}
 
-func queryJobStatus(ctx context.Context, conn *grpc.ClientConn, query JSQuery) error {
-	client := jsgrpc.NewJobServiceClient(conn)
-
-	resp, err := client.GetJobStatus(ctx, &jsgrpc.JobServiceRequest{
-		JobId:    fmt.Sprintf("%d", query.JobId),
-		JobSetId: fmt.Sprintf("%d", query.JobSetId),
-		Queue:    "fake_queue",
-	})
-	if err != nil {
-		fmt.Println(err.Error())
-		return err
+	// Start up the pool of workers. They will block until they have
+	// something to do, which arrives to them via the jobs channel.
+	for w := 1; w <= workerPoolSize; w++ {
+		go queryJobStatus(ctx, conn, queries, results)
 	}
 
-	fmt.Printf("%s - Job Set %d, Job %d\n", resp.State.String(), query.JobSetId, query.JobId)
-	return nil
+	for n := 0; n < numTasks; n++ {
+		fmt.Println(<-results)
+	}
+}
+
+func queryJobStatus(ctx context.Context, conn *grpc.ClientConn, queries <-chan JSQuery, results chan<- string) {
+	client := jsgrpc.NewJobServiceClient(conn)
+
+	for query := range queries {
+		// fmt.Printf("querying  Job Set %d, Job %d\n", query.JobSetId, query.JobId)
+		resp, err := client.GetJobStatus(ctx, &jsgrpc.JobServiceRequest{
+			JobId:    fmt.Sprintf("%d", query.JobId),
+			JobSetId: fmt.Sprintf("%d", query.JobSetId),
+			Queue:    "fake_queue",
+		})
+		if err != nil {
+			results <- err.Error()
+		} else {
+			results <- fmt.Sprintf("%s - Job Set %d, Job %d", resp.State.String(), query.JobSetId, query.JobId)
+		}
+	}
 }
