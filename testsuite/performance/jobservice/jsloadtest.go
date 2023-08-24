@@ -21,6 +21,12 @@ var (
 	numJobSets = flag.Int("jobsets", 50, "number of jobsets")
 )
 
+type JSQuery struct {
+	JobSetId int
+	JobId    int
+	Prefix   int
+}
+
 func init() {
 	rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 	flag.Parse()
@@ -50,9 +56,10 @@ func main() {
 
 	for jobSetId := 0; jobSetId < *numJobSets; jobSetId++ {
 		for jobId := 0; jobId < *numJobs; jobId++ {
-			fmt.Printf("querying jobset %d job %d\n", jobSetId, jobId)
+			// fmt.Printf("querying jobset %d job %d\n", jobSetId, jobId)
 			go func(jobSetId, jobId int) {
-				err := queryJobStatus(ctx, conn, jobSetId, jobId, prefix)
+				query := JSQuery{JobSetId: jobSetId, JobId: jobId, Prefix: prefix}
+				err := queryJobStatus(ctx, conn, query)
 				if err != nil {
 					fmt.Printf("Error querying job status: %v\n", err)
 				}
@@ -63,13 +70,12 @@ func main() {
 	wg.Wait()
 }
 
-func queryJobStatus(ctx context.Context, conn *grpc.ClientConn, jobSetId, jobId, prefix int) error {
+func queryJobStatus(ctx context.Context, conn *grpc.ClientConn, query JSQuery) error {
 	client := jsgrpc.NewJobServiceClient(conn)
 
 	resp, err := client.GetJobStatus(ctx, &jsgrpc.JobServiceRequest{
-		JobId: fmt.Sprintf("%d", jobId),
-		// JobSetId: fmt.Sprintf("%d_new_fake_job_set_id_%d", prefix, jobSetId),
-		JobSetId: fmt.Sprintf("%d", jobSetId),
+		JobId:    fmt.Sprintf("%d", query.JobId),
+		JobSetId: fmt.Sprintf("%d", query.JobSetId),
 		Queue:    "fake_queue",
 	})
 	if err != nil {
@@ -77,6 +83,6 @@ func queryJobStatus(ctx context.Context, conn *grpc.ClientConn, jobSetId, jobId,
 		return err
 	}
 
-	fmt.Printf("%s - %d\n", resp.State.String(), jobSetId)
+	fmt.Printf("%s - Job Set %d, Job %d\n", resp.State.String(), query.JobSetId, query.JobId)
 	return nil
 }

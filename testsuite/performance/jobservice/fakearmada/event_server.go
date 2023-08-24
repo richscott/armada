@@ -82,7 +82,7 @@ var messageScript = []*scriptedMessage{
 		},
 	},
 	{ // Queued
-		Delay: time.Duration(time.Millisecond * 200),
+		Delay: time.Duration(time.Millisecond * 50),
 		MessageFunc: func(request *api.JobSetRequest, jobSetId, jobId int) *api.EventMessage {
 			jobIdStr := fmt.Sprintf("%d", jobId)
 			jobSetIdStr := fmt.Sprintf("%d", jobSetId)
@@ -101,7 +101,7 @@ var messageScript = []*scriptedMessage{
 		},
 	},
 	{ // Running
-		Delay: time.Duration(time.Millisecond * 500),
+		Delay: time.Duration(time.Millisecond * 100),
 		MessageFunc: func(request *api.JobSetRequest, jobSetId, jobId int) *api.EventMessage {
 			jobIdStr := fmt.Sprintf("%d", jobId)
 			jobSetIdStr := fmt.Sprintf("%d", jobSetId)
@@ -126,7 +126,7 @@ var messageScript = []*scriptedMessage{
 		},
 	},
 	{ // Success
-		Delay: time.Duration(time.Second * 5),
+		Delay: time.Duration(time.Second * 1),
 		MessageFunc: func(request *api.JobSetRequest, jobSetId, jobId int) *api.EventMessage {
 			jobIdStr := fmt.Sprintf("%d", jobId)
 			jobSetIdStr := fmt.Sprintf("%d", jobSetId)
@@ -164,7 +164,7 @@ func (s *PerformanceTestEventServer) serveSimulatedEvents(request *api.JobSetReq
 		for _, message := range messageScript {
 			time.Sleep(message.Delay)
 			err := stream.Send(&api.EventStreamMessage{
-				Id:      fmt.Sprintf("%d-%d", jobSetId, jobId),
+				Id:      fmt.Sprintf("%d", jobSetId),
 				Message: message.MessageFunc(request, jobSetId, jobId),
 			})
 			if err != nil {
