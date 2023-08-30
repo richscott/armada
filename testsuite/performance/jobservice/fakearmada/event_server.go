@@ -82,7 +82,7 @@ var messageScript = []*scriptedMessage{
 		},
 	},
 	{ // Queued
-		Delay: time.Duration(time.Millisecond * 50),
+		Delay: time.Duration(time.Millisecond * 1),
 		MessageFunc: func(request *api.JobSetRequest, jobSetId, jobId int) *api.EventMessage {
 			jobIdStr := fmt.Sprintf("%d", jobId)
 			jobSetIdStr := fmt.Sprintf("%d", jobSetId)
@@ -101,7 +101,7 @@ var messageScript = []*scriptedMessage{
 		},
 	},
 	{ // Running
-		Delay: time.Duration(time.Millisecond * 100),
+		Delay: time.Duration(time.Millisecond * 1),
 		MessageFunc: func(request *api.JobSetRequest, jobSetId, jobId int) *api.EventMessage {
 			jobIdStr := fmt.Sprintf("%d", jobId)
 			jobSetIdStr := fmt.Sprintf("%d", jobSetId)
@@ -126,7 +126,7 @@ var messageScript = []*scriptedMessage{
 		},
 	},
 	{ // Success
-		Delay: time.Duration(time.Second * 1),
+		Delay: time.Duration(time.Millisecond * 1),
 		MessageFunc: func(request *api.JobSetRequest, jobSetId, jobId int) *api.EventMessage {
 			jobIdStr := fmt.Sprintf("%d", jobId)
 			jobSetIdStr := fmt.Sprintf("%d", jobSetId)

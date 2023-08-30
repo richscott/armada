@@ -17,6 +17,7 @@ import (
 	"github.com/armadaproject/armada/internal/jobservice"
 	"github.com/armadaproject/armada/internal/jobservice/configuration"
 	"github.com/armadaproject/armada/pkg/client"
+	"github.com/sirupsen/logrus"
 	// _ "net/http/pprof"
 )
 
@@ -31,6 +32,11 @@ func init() {
 
 func main() {
 	var wg sync.WaitGroup
+
+	// Since we will be querying at a very fast rate, squelch the normal
+	// Info-level "finished unary call..." messages from GRPC, which can slow
+	// down the benchmarked performance.
+	logrus.SetLevel(logrus.WarnLevel)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -83,6 +89,8 @@ func main() {
 				InitialConnections: 10,
 				Capacity:           50,
 			},
+			// SubscriberPoolSize: 10,
+			PurgeJobSetTime: 30,
 			ApiConnection: client.ApiConnectionDetails{
 				ArmadaUrl:  "localhost:1337",
 				ForceNoTls: true,
