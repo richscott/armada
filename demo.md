@@ -1,11 +1,5 @@
 # Armada Demo
 
-<div class="responsive-video">
-<iframe width="560" height="315" src="https://www.youtube.com/embed/l76yh1VjhaY" title="Armada demo video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-</div>
-
-> <small><i>This video demonstrates the use of Armadactl, Armada Lookout UI, and Apache Airflow.</i></small>
-
 This guide will show you how to take a quick test drive of an Armada
 instance already deployed to AWS EKS.
 
